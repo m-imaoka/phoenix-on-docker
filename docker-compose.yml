@@ -1,0 +1,32 @@
+version: '2'
+services:
+  client:
+    image: node
+    working_dir: /project
+    volumes:
+      - ./projects/${CLIENT}:/project
+      - ./node_modules:/project/node_modules
+    ports:
+      - 8080:8080
+    depends_on:
+      - web
+    command: "npm run start"
+
+  web:
+    build: ./Dockerfiles/phoenix
+    working_dir: /project
+    volumes:
+      - ./projects/${WEB}:/project
+    ports:
+      - 4000:4000
+    depends_on:
+      - postgres
+    command: "mix phoenix.server"
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./postgresql/data:/var/lib/postgresql/data
