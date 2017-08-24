@@ -1,11 +1,18 @@
 version: '2'
 services:
-  client:
-    image: node
-    working_dir: /project
+  datastore:
+    image: busybox
     volumes:
-      - ./projects/${CLIENT}:/project
-      - ./node_modules:/project/node_modules
+      - deps:/app/deps
+      - node_modules:/app/node_modules
+      - postgres-data:/var/lib/postgresql/data
+
+  client:
+    build: ./Dockerfiles/node
+    volumes:
+      - ./projects/${CLIENT}:/app
+    volumes_from:
+      - datastore
     ports:
       - 8080:8080
     depends_on:
@@ -14,9 +21,10 @@ services:
 
   web:
     build: ./Dockerfiles/phoenix
-    working_dir: /project
     volumes:
-      - ./projects/${WEB}:/project
+      - ./projects/${WEB}:/app
+    volumes_from:
+      - datastore
     ports:
       - 4000:4000
     depends_on:
@@ -28,5 +36,13 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    volumes:
-      - ./postgresql/data:/var/lib/postgresql/data
+    volumes_from:
+      - datastore
+
+volumes:
+  deps:
+    driver: local
+  node_modules:
+    driver: local
+  postgres-data:
+    driver: local
